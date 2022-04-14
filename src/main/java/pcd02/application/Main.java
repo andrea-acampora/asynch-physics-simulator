@@ -13,7 +13,7 @@ public class Main {
         Model model = new ModelImpl(numberOfBodies);
         View view = new SimulationView();
         Controller controller = new ControllerImpl(model, view);
-        controller.execute();
         view.start();
+        controller.execute();
     }
 }
