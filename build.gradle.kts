@@ -26,7 +26,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass.set("pcd01.application.Main")
+    mainClass.set("pcd02.application.Main")
 }
 
 tasks.test {
