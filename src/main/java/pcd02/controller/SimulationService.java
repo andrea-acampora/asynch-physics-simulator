@@ -39,7 +39,7 @@ public class SimulationService extends Thread {
         this.startSynch = startSynch;
         this.stopFlag = stopFlag;
         this.numberOfSteps = numberOfSteps;
-        this.bodiesSplit = Lists.partition(state.getBodies(), state.getBodies().size() / this.poolSize +1);
+        this.bodiesSplit = Lists.partition(state.getBodies(), state.getBodies().size() / this.poolSize + 1 );
     }
 
     public void run() {
@@ -53,7 +53,7 @@ public class SimulationService extends Thread {
                 startSynch.waitStart();
             }
 
-            List<Future<List<Body>>> results = new LinkedList<>();
+            List<Future<List<Void>>> results = new LinkedList<>();
 
             bodiesSplit.forEach(split -> results.add(executor.submit(taskFactory.createComputeForcesTask(state, split))));
 

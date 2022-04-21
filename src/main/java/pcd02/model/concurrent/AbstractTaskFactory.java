@@ -11,7 +11,7 @@ import java.util.concurrent.Callable;
  */
 public interface AbstractTaskFactory {
 
-    Callable<List<Body>> createComputeForcesTask(SimulationState state, List<Body> bodies);
+    Callable<List<Void>> createComputeForcesTask(SimulationState state, List<Body> bodies);
 
-    Callable<List<Body>> createUpdatePositionTask(SimulationState state, List<Body> bodies);
+    Callable<List<Void>> createUpdatePositionTask(SimulationState state, List<Body> bodies);
 }

@@ -10,7 +10,7 @@ import java.util.concurrent.Callable;
 public class TaskFactory implements AbstractTaskFactory {
 
     @Override
-    public Callable<List<Body>> createComputeForcesTask(SimulationState state, List<Body> bodies) {
+    public Callable<List<Void>> createComputeForcesTask(SimulationState state, List<Body> bodies) {
         return () -> {
                 for (Body b : bodies){
                     V2d totalForce = new V2d(0, 0);
@@ -31,19 +31,19 @@ public class TaskFactory implements AbstractTaskFactory {
                     /* update velocity */
                     b.updateVelocity(acc, state.getDt());
                 }
-                return bodies;
+                return null;
         };
     }
 
     @Override
-    public Callable<List<Body>> createUpdatePositionTask(SimulationState state, List<Body> bodies) {
+    public Callable<List<Void>> createUpdatePositionTask(SimulationState state, List<Body> bodies) {
         return () -> {
             for (Body b : bodies) {
                 /* update bodies new pos */
                 b.updatePos(state.getDt());
                 b.checkAndSolveBoundaryCollision(state.getBounds());
             }
-            return bodies;
+            return null;
         };
     }
 }
