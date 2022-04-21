@@ -1,5 +1,6 @@
 package pcd02.controller;
 
+import com.google.common.collect.Lists;
 import pcd02.controller.concurrent.StartSynch;
 import pcd02.controller.concurrent.StopFlag;
 import pcd02.model.Body;
@@ -25,15 +26,19 @@ public class SimulationService extends Thread {
     private final View view;
     private final StartSynch startSynch;
     private final StopFlag stopFlag;
+    private final int poolSize = Runtime.getRuntime().availableProcessors() + 1;
+    List<List<Body>> bodiesSplit;
+
 
     public SimulationService(SimulationState state, int numberOfSteps, View view, StartSynch startSynch, StopFlag stopFlag) {
-        this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
+        this.executor = Executors.newFixedThreadPool(poolSize);
         this.state = state;
         this.taskFactory = new TaskFactory();
         this.view = view;
         this.startSynch = startSynch;
         this.stopFlag = stopFlag;
         this.numberOfSteps = numberOfSteps;
+        this.bodiesSplit = Lists.partition(state.getBodies(), state.getBodies().size() / this.poolSize +1);
     }
 
     public void run() {
@@ -48,21 +53,8 @@ public class SimulationService extends Thread {
                 startSynch.waitStart();
             }
 
-            List<Future<Body>> results = new LinkedList<>();
-
-            state.getBodies().forEach(b -> results.add(executor.submit(taskFactory.createComputeForcesTask(state, b))));
-
-            results.forEach(a -> {
-                try {
-                    a.get();
-                } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
-                }
-            });
-
-            results.clear();
-
-            state.getBodies().forEach(b -> results.add(executor.submit(taskFactory.createUpdatePositionTask(state, b))));
+            List<Future<List<Body>>> results = new LinkedList<>();
+            bodiesSplit.forEach(split -> results.add(executor.submit(taskFactory.createComputeForcesTask(state, split))));
 
             results.forEach(a -> {
                 try {
@@ -73,7 +65,19 @@ public class SimulationService extends Thread {
             });
 
             results.clear();
-            view.display(state);
+
+            bodiesSplit.forEach(split -> results.add(executor.submit(taskFactory.createUpdatePositionTask(state, split))));
+
+            results.forEach(a -> {
+                try {
+                    a.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            results.clear();
+          //  view.display(state);
             state.incrementSteps();
             state.setVt(state.getVt() + state.getDt());
         }
