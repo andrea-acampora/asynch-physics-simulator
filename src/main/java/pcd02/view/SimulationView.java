@@ -7,6 +7,10 @@ import pcd02.model.SimulationState;
 public class SimulationView implements View {
 
     private final SimulationGUI gui;
+    private static final double FPS = 120;
+    private long displayTime;
+    private int counter = 0;
+
 
     public SimulationView() {
         this.gui = new SimulationGUI();
@@ -14,7 +18,12 @@ public class SimulationView implements View {
 
     @Override
     public void display(SimulationState state) {
-        this.gui.display(state);
+        long currentDisplayTime = System.currentTimeMillis();
+        double elapsed = currentDisplayTime - this.displayTime;
+        if (elapsed > (( 1 / FPS) * 1000)) {
+            this.gui.display(state);
+            this.displayTime = currentDisplayTime;
+        }
     }
 
     @Override
