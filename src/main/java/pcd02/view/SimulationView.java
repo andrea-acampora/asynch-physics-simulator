@@ -9,7 +9,6 @@ public class SimulationView implements View {
     private final SimulationGUI gui;
     private static final double FPS = 120;
     private long displayTime;
-    private int counter = 0;
 
 
     public SimulationView() {
