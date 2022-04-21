@@ -1,12 +1,14 @@
 package pcd02.controller;
 
 import pcd02.controller.concurrent.StartSynch;
+import pcd02.controller.concurrent.StopFlag;
 import pcd02.model.Body;
 import pcd02.model.P2d;
 import pcd02.model.SimulationState;
 import pcd02.model.V2d;
 import pcd02.model.concurrent.AbstractTaskFactory;
 import pcd02.model.concurrent.TaskFactory;
+import pcd02.utils.Chrono;
 import pcd02.view.View;
 
 import java.util.LinkedList;
@@ -16,46 +18,67 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class SimulationService extends Thread{
+public class SimulationService extends Thread {
 
-    private int poolSize = 8;
-    private ExecutorService executor;
+    private final ExecutorService executor;
     protected SimulationState state;
-    private int maxIter = 500;
-    private AbstractTaskFactory taskFactory;
-    private View view;
-    private StartSynch startSynch;
+    private final int numberOfSteps;
+    private final AbstractTaskFactory taskFactory;
+    private final View view;
+    private final StartSynch startSynch;
+    private StopFlag stopFlag;
 
-    public SimulationService(SimulationState state, View view, StartSynch startSynch) {
-        this.executor = Executors.newFixedThreadPool(poolSize);
+    public SimulationService(SimulationState state, int numberOfSteps, View view, StartSynch startSynch, StopFlag stopFlag) {
+        this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
         this.state = state;
         this.taskFactory = new TaskFactory();
         this.view = view;
         this.startSynch = startSynch;
+        this.stopFlag = stopFlag;
+        this.numberOfSteps = numberOfSteps;
     }
 
-    public void start() {
+    public void run() {
+
         startSynch.waitStart();
-        while(state.getSteps() < maxIter){
-            //mi creao una nuova lista
+
+        Chrono time = new Chrono();
+        time.start();
+        while(state.getSteps() < this.numberOfSteps) {
+            if(stopFlag.isSet()) {
+                startSynch.waitStart();
+            }
+
             List<Future<Body>> results = new LinkedList<>();
-            List<Future<Body>> results2 = new LinkedList<>();
 
-            //calcolo la velocità di tutti i body
-//            ArrayList<Body> defCopy = new ArrayList<>();
-//            state.getBodies().forEach(b -> defCopy.add(new Body(b.getId(), new P2d(b.getPos().getX(), b.getPos().getY()), new V2d(b.getVel().x, b.getVel().y), b.getMass())));
-//
-            state.getBodies().forEach(b -> {
-                executor.submit(taskFactory.createComputeForcesTask(state, b));
+            state.getBodies().forEach(b -> results.add(executor.submit(taskFactory.createComputeForcesTask(state, b))));
+
+            results.forEach(a -> {
+                try {
+                    a.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
             });
 
-            state.getBodies().forEach(b -> {
-              executor.submit(taskFactory.createUpdatePositionTask(state, b));
+            results.clear();
+
+            state.getBodies().forEach(b -> results.add(executor.submit(taskFactory.createUpdatePositionTask(state, b))));
+
+            results.forEach(a -> {
+                try {
+                    a.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
             });
 
+            results.clear();
             view.display(state);
             state.incrementSteps();
             state.setVt(state.getVt() + state.getDt());
         }
+        time.stop();
+        System.out.println("Time elapsed: " + time.getTime());
     }
 }

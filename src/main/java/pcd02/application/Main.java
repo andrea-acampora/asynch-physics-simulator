@@ -9,7 +9,7 @@ import pcd02.view.View;
 public class Main {
 
     public static void main(String[] args) {
-        int numberOfBodies = 500;
+        int numberOfBodies = 1000;
         Model model = new ModelImpl(numberOfBodies);
         View view = new SimulationView();
         Controller controller = new ControllerImpl(model, view);

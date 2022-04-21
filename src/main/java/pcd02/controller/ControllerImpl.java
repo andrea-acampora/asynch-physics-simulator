@@ -9,7 +9,6 @@ public class ControllerImpl implements InputListener, Controller {
 
 	private final Model model;
 	private final View view;
- // private final MasterAgentSubListPerTask masterAgentSubListPerTask;
 	private final StopFlag stopFlag;
 	private final StartSynch startSynch;
 	SimulationService simulationService;
@@ -22,9 +21,7 @@ public class ControllerImpl implements InputListener, Controller {
 		this.view.addListener(this);
 		this.stopFlag = new StopFlag();
 		this.startSynch = new StartSynch();
-		//this.masterAgentOneBodyPerTask = new MasterAgentOneBodyPerTask(view, model.getState(), model.getTaskFactory(), NUMBER_OF_STEPS, stopFlag, startSynch );
-		// this.masterAgentSubListPerTask = new MasterAgentSubListPerTask(view, model.getState(), numberOfSteps, stopFlag, startSynch);
-		this.simulationService = new SimulationService(model.getState(), view, startSynch);
+		this.simulationService = new SimulationService(model.getState(), NUMBER_OF_STEPS, view, startSynch, stopFlag);
 	}
 
 	public void start() {
@@ -40,7 +37,5 @@ public class ControllerImpl implements InputListener, Controller {
 	@Override
 	public void execute() {
 		simulationService.start();
-		//this.masterAgentOneBodyPerTask.start();
-	 // this.masterAgentSubListPerTask.start();
 	}
 }

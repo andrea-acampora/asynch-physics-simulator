@@ -5,8 +5,5 @@ package pcd02.controller;
  */
 public interface Controller {
 
-    /**
-     * Starts the execution of the {@link AbstractMasterAgent}.
-     */
     void execute();
 }

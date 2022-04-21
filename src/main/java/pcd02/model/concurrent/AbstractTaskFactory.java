@@ -11,19 +11,7 @@ import java.util.concurrent.Callable;
  */
 public interface AbstractTaskFactory {
 
-    /**
-     *
-     * @param state The current state of the simulation.
-     * @param bodiesList The set of {@link Body} of the simulation.
-     * @return the {@link Task} used to compute the forces of a body.
-     */
-    Runnable createComputeForcesTask(SimulationState state, Body b);
+    Callable<Body> createComputeForcesTask(SimulationState state, Body b);
 
-    /**
-     *
-     * @param state The current state of the simulation.
-     * @param bodiesList The set of {@link Body} of the simulation.
-     * @return the {@link Task} used to update the position of a body.
-     */
-    Runnable createUpdatePositionTask(SimulationState state, Body b);
+    Callable<Body> createUpdatePositionTask(SimulationState state, Body b);
 }

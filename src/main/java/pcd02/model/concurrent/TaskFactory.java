@@ -4,13 +4,12 @@ import pcd02.model.Body;
 import pcd02.model.SimulationState;
 import pcd02.model.V2d;
 
-import java.util.List;
 import java.util.concurrent.Callable;
 
 public class TaskFactory implements AbstractTaskFactory {
 
     @Override
-    public Runnable createComputeForcesTask(SimulationState state, Body b) {
+    public Callable<Body> createComputeForcesTask(SimulationState state, Body b) {
         return () -> {
                 V2d totalForce = new V2d(0, 0);
                 /* compute total repulsive force */
@@ -29,15 +28,17 @@ public class TaskFactory implements AbstractTaskFactory {
                 V2d acc = new V2d(totalForce).scalarMul(1.0 / b.getMass());
                 /* update velocity */
                 b.updateVelocity(acc, state.getDt());
+                return b;
         };
     }
 
     @Override
-    public Runnable createUpdatePositionTask(SimulationState state, Body b) {
+    public Callable<Body> createUpdatePositionTask(SimulationState state, Body b) {
         return () -> {
             /* update bodies new pos */
             b.updatePos(state.getDt());
             b.checkAndSolveBoundaryCollision(state.getBounds());
+            return b;
         };
     }
 }
