@@ -3,9 +3,7 @@ package pcd02.controller;
 import pcd02.controller.concurrent.StartSynch;
 import pcd02.controller.concurrent.StopFlag;
 import pcd02.model.Body;
-import pcd02.model.P2d;
 import pcd02.model.SimulationState;
-import pcd02.model.V2d;
 import pcd02.model.concurrent.AbstractTaskFactory;
 import pcd02.model.concurrent.TaskFactory;
 import pcd02.utils.Chrono;
@@ -26,7 +24,7 @@ public class SimulationService extends Thread {
     private final AbstractTaskFactory taskFactory;
     private final View view;
     private final StartSynch startSynch;
-    private StopFlag stopFlag;
+    private final StopFlag stopFlag;
 
     public SimulationService(SimulationState state, int numberOfSteps, View view, StartSynch startSynch, StopFlag stopFlag) {
         this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
@@ -44,7 +42,8 @@ public class SimulationService extends Thread {
 
         Chrono time = new Chrono();
         time.start();
-        while(state.getSteps() < this.numberOfSteps) {
+        while (state.getSteps() < this.numberOfSteps) {
+
             if(stopFlag.isSet()) {
                 startSynch.waitStart();
             }
