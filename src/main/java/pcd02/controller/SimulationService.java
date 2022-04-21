@@ -28,10 +28,11 @@ public class SimulationService extends Thread {
     private final StopFlag stopFlag;
     private final int poolSize = Runtime.getRuntime().availableProcessors() + 1;
     List<List<Body>> bodiesSplit;
+    private static final double FPS = 60;
 
 
     public SimulationService(SimulationState state, int numberOfSteps, View view, StartSynch startSynch, StopFlag stopFlag) {
-        this.executor = Executors.newFixedThreadPool(poolSize);
+        this.executor = Executors.newCachedThreadPool();
         this.state = state;
         this.taskFactory = new TaskFactory();
         this.view = view;
@@ -44,16 +45,16 @@ public class SimulationService extends Thread {
     public void run() {
 
         startSynch.waitStart();
-
         Chrono time = new Chrono();
         time.start();
         while (state.getSteps() < this.numberOfSteps) {
-
-            if(stopFlag.isSet()) {
+            long initialTime = System.currentTimeMillis();
+            if (stopFlag.isSet()) {
                 startSynch.waitStart();
             }
 
             List<Future<List<Body>>> results = new LinkedList<>();
+
             bodiesSplit.forEach(split -> results.add(executor.submit(taskFactory.createComputeForcesTask(state, split))));
 
             results.forEach(a -> {
@@ -65,7 +66,6 @@ public class SimulationService extends Thread {
             });
 
             results.clear();
-
             bodiesSplit.forEach(split -> results.add(executor.submit(taskFactory.createUpdatePositionTask(state, split))));
 
             results.forEach(a -> {
@@ -75,13 +75,21 @@ public class SimulationService extends Thread {
                     e.printStackTrace();
                 }
             });
-
             results.clear();
-          //  view.display(state);
-            state.incrementSteps();
             state.setVt(state.getVt() + state.getDt());
+            view.display(state);
+            state.incrementSteps();
+            double elapsed = System.currentTimeMillis() - initialTime;
+            if (elapsed < (( 1 / FPS) * 1000)) {
+                try {
+                    Thread.sleep((long) (((1 / FPS) * 1000) - elapsed));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         time.stop();
         System.out.println("Time elapsed: " + time.getTime());
+        System.exit(0);
     }
 }
