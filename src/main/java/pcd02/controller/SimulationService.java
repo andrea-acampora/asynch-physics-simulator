@@ -10,12 +10,10 @@ import pcd02.model.concurrent.TaskFactory;
 import pcd02.utils.Chrono;
 import pcd02.view.View;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 public class SimulationService extends Thread {
 
@@ -53,8 +51,8 @@ public class SimulationService extends Thread {
 
             List<Future<List<Void>>> results = new LinkedList<>();
 
-            bodiesSplit.forEach(split -> results.add(executor.submit(taskFactory.createComputeForcesTask(state, split))));
-
+            //bodiesSplit.forEach(split -> results.add(executor.submit(taskFactory.createComputeForcesTask(state, split))));
+            this.state.getBodies().forEach(split -> results.add(executor.submit(taskFactory.createComputeForcesTask(state, Collections.singletonList(split)))));
             results.forEach(a -> {
                 try {
                     a.get();
@@ -64,7 +62,8 @@ public class SimulationService extends Thread {
             });
 
             results.clear();
-            bodiesSplit.forEach(split -> results.add(executor.submit(taskFactory.createUpdatePositionTask(state, split))));
+            //bodiesSplit.forEach(split -> results.add(executor.submit(taskFactory.createUpdatePositionTask(state, split))));
+            this.state.getBodies().forEach(split -> results.add(executor.submit(taskFactory.createUpdatePositionTask(state, Collections.singletonList(split)))));
 
             results.forEach(a -> {
                 try {

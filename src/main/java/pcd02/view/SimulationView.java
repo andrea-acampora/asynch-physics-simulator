@@ -7,7 +7,7 @@ import pcd02.model.SimulationState;
 public class SimulationView implements View {
 
     private final SimulationGUI gui;
-    private static final double FPS = 120;
+    private static final double FPS = 180;
     private long displayTime;
 
 
