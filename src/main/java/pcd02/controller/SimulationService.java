@@ -18,25 +18,26 @@ import java.util.concurrent.*;
 public class SimulationService extends Thread {
 
     private final ExecutorService executor;
-    protected SimulationState state;
+    private final SimulationState state;
     private final int numberOfSteps;
     private final AbstractTaskFactory taskFactory;
     private final View view;
     private final StartSynch startSynch;
     private final StopFlag stopFlag;
-    private final int poolSize = Runtime.getRuntime().availableProcessors() + 1;
-    List<List<Body>> bodiesSplit;
+    private final List<List<Body>> bodiesSplit;
 
 
-    public SimulationService(SimulationState state, int numberOfSteps, View view, StartSynch startSynch, StopFlag stopFlag) {
-        this.executor = Executors.newCachedThreadPool();
+    public SimulationService(SimulationState state, int numberOfSteps, View view, StartSynch startSynch, StopFlag stopFlag, AbstractTaskFactory taskFactory) {
+
         this.state = state;
-        this.taskFactory = new TaskFactory();
+        this.taskFactory = taskFactory;
         this.view = view;
         this.startSynch = startSynch;
         this.stopFlag = stopFlag;
         this.numberOfSteps = numberOfSteps;
-        this.bodiesSplit = Lists.partition(state.getBodies(), state.getBodies().size() / this.poolSize + 1 );
+        int poolSize = Runtime.getRuntime().availableProcessors() + 1;
+        this.executor = Executors.newFixedThreadPool(poolSize);
+        this.bodiesSplit = Lists.partition(state.getBodies(), state.getBodies().size() / poolSize + 1 );
     }
 
     public void run() {
@@ -51,8 +52,7 @@ public class SimulationService extends Thread {
 
             List<Future<List<Void>>> results = new LinkedList<>();
 
-            //bodiesSplit.forEach(split -> results.add(executor.submit(taskFactory.createComputeForcesTask(state, split))));
-            this.state.getBodies().forEach(split -> results.add(executor.submit(taskFactory.createComputeForcesTask(state, Collections.singletonList(split)))));
+            bodiesSplit.forEach(split -> results.add(executor.submit(taskFactory.createComputeForcesTask(state, split))));
             results.forEach(a -> {
                 try {
                     a.get();
@@ -62,8 +62,7 @@ public class SimulationService extends Thread {
             });
 
             results.clear();
-            //bodiesSplit.forEach(split -> results.add(executor.submit(taskFactory.createUpdatePositionTask(state, split))));
-            this.state.getBodies().forEach(split -> results.add(executor.submit(taskFactory.createUpdatePositionTask(state, Collections.singletonList(split)))));
+            bodiesSplit.forEach(split -> results.add(executor.submit(taskFactory.createUpdatePositionTask(state, split))));
 
             results.forEach(a -> {
                 try {

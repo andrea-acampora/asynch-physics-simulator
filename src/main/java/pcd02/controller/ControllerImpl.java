@@ -13,7 +13,7 @@ public class ControllerImpl implements InputListener, Controller {
 	private final StartSynch startSynch;
 	SimulationService simulationService;
 
-	private static final int NUMBER_OF_STEPS = 1000;
+	private static final int NUMBER_OF_STEPS = 50000;
 
 	public ControllerImpl(final Model model, final View view) {
 		this.model = model;
@@ -21,7 +21,7 @@ public class ControllerImpl implements InputListener, Controller {
 		this.view.addListener(this);
 		this.stopFlag = new StopFlag();
 		this.startSynch = new StartSynch();
-		this.simulationService = new SimulationService(model.getState(), NUMBER_OF_STEPS, view, startSynch, stopFlag);
+		this.simulationService = new SimulationService(model.getState(), NUMBER_OF_STEPS, view, startSynch, stopFlag, model.getTaskFactory());
 	}
 
 	public void start() {
